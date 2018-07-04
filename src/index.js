@@ -2,8 +2,8 @@ import * as React from 'react';
 import ReactDOM from 'react-dom';
 import './styles/index.css';
 
+import { GameInfo, GameLabel } from './styles/styledComponent';
 import { gameSpeeds } from './constants/gameSpeeds';
-
 import TopBarButtons from './components/TopBarButtons';
 import GameGrid from './components/GameGrid';
 
@@ -137,19 +137,22 @@ class Main extends React.Component {
 
 		return (
 			<div>
-				<h1>Code Challenge - "Game of Life"</h1>
+				<GameLabel>Code Challenge - "Game of Life"</GameLabel>
 
 				<TopBarButtons
 					gameMode={buttonGameMode}
 					gridSize={this.gridSize}
 				/>
+
 				<GameGrid
 					gridFull={this.state.gridFull}
 					rows={this.rows}
 					cols={this.cols}
 					selectBox={this.selectCell}
 				/>
-				<h2>Generations: {this.state.generation}</h2>
+				<GameInfo>
+					Generations: {this.state.generation}
+				</GameInfo>
 			</div>
 		);
 	}

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { ButtonToolbar, MenuItem, DropdownButton } from 'react-bootstrap';
+import { TopBarButtonsContainer, GameButton } from '../styles/styledComponent';
 
 function TopBarButtons({ gameMode, gridSize }) {
 
@@ -8,23 +9,13 @@ function TopBarButtons({ gameMode, gridSize }) {
 	}
 
 	return (
-		<div className="center">
+		<TopBarButtonsContainer>
 			<ButtonToolbar>
-				<button className="btn btn-default" onClick={gameMode.playButton}>
-					Play
-				</button>
-				<button className="btn btn-default" onClick={gameMode.pauseButton}>
-					Pause
-				</button>
-				<button className="btn btn-default" onClick={gameMode.slow}>
-					Slow
-				</button>
-				<button className="btn btn-default" onClick={gameMode.fast}>
-					Fast
-				</button>
-				<button className="btn btn-default" onClick={gameMode.seed}>
-					Seed
-				</button>
+				<GameButton onClick={gameMode.playButton}>Play</GameButton>
+				<GameButton onClick={gameMode.pauseButton}>Pause</GameButton>
+				<GameButton onClick={gameMode.slow}>Slow</GameButton>
+				<GameButton onClick={gameMode.fast}>Fast</GameButton>
+				<GameButton onClick={gameMode.seed}>Seed</GameButton>
 
 				<DropdownButton
 					title="Grid Size"
@@ -35,9 +26,8 @@ function TopBarButtons({ gameMode, gridSize }) {
 					<MenuItem eventKey="2">50x30</MenuItem>
 					<MenuItem eventKey="3">70x50</MenuItem>
 				</DropdownButton>
-
 			</ButtonToolbar>
-		</div>
+		</TopBarButtonsContainer>
 	)
 }
 
