@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Cell from './Cell';
-import { GridContainer } from '../styles/styledComponent';
+import { GridContainer, Grid } from '../styles/styledComponent';
 
 function GameGrid({ cols, gridFull, selectBox }) {
     const width = (cols * 14);
@@ -31,9 +31,11 @@ function GameGrid({ cols, gridFull, selectBox }) {
     initGrid();
 
     return (
-        <GridContainer style={{ width: width }}>
-            {rowsArr}
-        </GridContainer>
+        <Grid>
+            <GridContainer style={{ width: width }}>
+                {rowsArr}
+            </GridContainer>
+        </Grid>
     );
 }
 

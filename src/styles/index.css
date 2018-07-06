@@ -38,3 +38,13 @@ h4 {
 .btn-toolbar {
   display: flex
 }
+
+.btn-group > .btn:first-child {
+  margin-left: 0;
+  width: 130px;
+}
+
+.btn-group,
+.btn-group-vertical {
+  margin-bottom: 15px;
+}

@@ -2,44 +2,109 @@ import * as React from 'react';
 import ReactDOM from 'react-dom';
 import './styles/index.css';
 
-import { GameInfo, GameLabel } from './styles/styledComponent';
+import * as logic from './gameLogic/logic';
 import { gameSpeeds } from './constants/gameSpeeds';
+import { seederModes } from './constants/seederModes';
+import { gameStatus } from './constants/gameStatus';
+import {
+	GameInfo,
+	GameLabel,
+	GameContainer,
+	GenerationLabel,
+	GameStatusLabel,
+	GameLabels,
+	TitleLabel
+} from './styles/styledComponent';
+
 import TopBarButtons from './components/TopBarButtons';
 import GameGrid from './components/GameGrid';
+import SideOptions from './components/SideOptions';
 
 class Main extends React.Component {
 	constructor() {
 		super();
 
-		this.speed = gameSpeeds.NORMAL_SPEED;
-		this.rows = 30;
+		this.rows = 50;
 		this.cols = 50;
+		this.speed = gameSpeeds.NORMAL_SPEED;
+		this.seederMode = seederModes.DEFAULT;
+		this.currentGameStatus = gameStatus.DRAFT;
 
 		this.state = {
 			generation: 0,
 			gridFull: Array(this.rows)
 				.fill()
-				.map(() => Array(this.cols).fill(false))
+				.map(() => Array(this.cols).fill(false)),
+			gameOfLife: true
 		};
 	}
 
 	componentDidMount() {
-		this.seedGrid();
-		this.playButton();
+		this.initSeedGrid();
 	}
 
-	selectCell = (row, col) => {
-		let gridCopy = arrayClone(this.state.gridFull);
-		gridCopy[row][col] = !gridCopy[row][col];
+	playButton = () => {
+		clearInterval(this.intervalId);
+		this.intervalId = setInterval(this.play, this.speed);
+	};
+
+	stepButton = () => {
+		clearInterval(this.intervalId);
+		this.play();
+	};
+
+	pauseButton = () => {
+		clearInterval(this.intervalId);
+
+		this.currentGameStatus = gameStatus.PAUSED;
+	};
+
+	slowButton = () => {
+		this.speed = gameSpeeds.SLOW_SPEED;
+		this.playButton();
+	};
+
+	normalButton = () => {
+		this.speed = gameSpeeds.NORMAL_SPEED;
+		this.playButton();
+	};
+
+	resetButton = () => {
+		this.clearGrid();
+		this.initSeedGrid();
+
+		this.currentGameStatus = gameStatus.DRAFT;
+	}
+
+	fastButton = () => {
+		this.speed = gameSpeeds.FAST_SPEED;
+		this.playButton();
+	};
+
+	initSeedGrid = () => {
+		if (this.seederMode === seederModes.DEFAULT) {
+			this.defaultSeedGrid();
+		} else {
+			this.randomSeedGrid();
+		}
+	}
+
+	defaultSeedGrid = () => {
+		let gridCopy = logic.arrayClone(this.state.gridFull);
+		gridCopy[0][0] = true;
+		gridCopy[0][1] = true;
+		gridCopy[1][0] = true;
+		gridCopy[1][3] = true;
+		gridCopy[2][1] = true;
+		gridCopy[2][2] = true;
 
 		this.setState({
 			gridFull: gridCopy
 		});
-	};
+	}
 
-	seedGrid = () => {
-		let gridCopy = arrayClone(this.state.gridFull);
-
+	randomSeedGrid = () => {
+		let gridCopy = logic.arrayClone(this.state.gridFull);
 		for (let rowIndex = 0; rowIndex < this.rows; rowIndex++) {
 			for (let columnIndex = 0; columnIndex < this.cols; columnIndex++) {
 				if (Math.floor(Math.random() * 4) === 1) {
@@ -47,119 +112,165 @@ class Main extends React.Component {
 				}
 			}
 		}
+
 		this.setState({
 			gridFull: gridCopy
 		});
 	};
 
-	playButton = () => {
-		clearInterval(this.intervalId);
-		this.intervalId = setInterval(this.play, this.speed);
-	};
-
-	pauseButton = () => {
-		clearInterval(this.intervalId);
-	};
-
-	slow = () => {
-		this.speed = gameSpeeds.SLOW_SPEED;
-		this.playButton();
-	};
-
-	fast = () => {
-		this.speed = gameSpeeds.FAST_SPEED;
-		this.playButton();
-	};
-
-	clear = () => {
-		const gridFull = Array(this.rows)
+	clearGrid = () => {
+		let tmpGrid = Array(this.rows)
 			.fill()
 			.map(() => Array(this.cols).fill(false));
 
-		this.setState(() => ({
-			gridFull,
-			generation: 0
-		}));
+		this.state = {
+			generation: 0,
+			gridFull: tmpGrid,
+			gameOfLife: true
+		};
 	};
 
-	gridSize = size => {
+	handleGridSize = (size) => {
 		switch (size) {
 			case "1":
-				this.cols = 20;
-				this.rows = 10;
+				this.cols = 10;
+				this.rows = 20;
 				break;
+
 			case "2":
-				this.cols = 50;
+				this.cols = 20;
 				this.rows = 30;
 				break;
+
 			default:
-				this.cols = 70;
+				this.cols = 50;
 				this.rows = 50;
 		}
-		this.clear();
+
+		this.clearGrid();
+		this.initSeedGrid();
+
+		this.currentGameStatus = gameStatus.DRAFT;
+	};
+
+	handleSeederMode = (seederOption) => {
+		switch (seederOption) {
+			case "1":
+				this.seederMode = seederModes.DEFAULT;
+				break;
+
+			default:
+				this.seederMode = seederModes.RANDOM;
+				break;
+		}
+
+		this.clearGrid();
+		this.initSeedGrid();
+	};
+
+	selectCell = (row, col) => {
+		this.currentGameStatus = gameStatus.PLAYING;
+
+		clearInterval(this.intervalId);
+		let gridCopy = logic.arrayClone(this.state.gridFull);
+		gridCopy[row][col] = !gridCopy[row][col];
+
+		this.setState({
+			gridFull: gridCopy
+		}, this.play());
 	};
 
 	play = () => {
-		let currentGrid = this.state.gridFull;
-		let tmpGrid = arrayClone(this.state.gridFull);
-
-		for (let i = 0; i < this.rows; i++) {
-			for (let j = 0; j < this.cols; j++) {
-				let count = 0;
-				if (i > 0) if (currentGrid[i - 1][j]) count++;
-				if (i > 0 && j > 0) if (currentGrid[i - 1][j - 1]) count++;
-				if (i > 0 && j < this.cols - 1) if (currentGrid[i - 1][j + 1]) count++;
-				if (j < this.cols - 1) if (currentGrid[i][j + 1]) count++;
-				if (j > 0) if (currentGrid[i][j - 1]) count++;
-				if (i < this.rows - 1) if (currentGrid[i + 1][j]) count++;
-				if (i < this.rows - 1 && j > 0) if (currentGrid[i + 1][j - 1]) count++;
-				if (i < this.rows - 1 && this.cols - 1) if (currentGrid[i + 1][j + 1]) count++;
-				if (currentGrid[i][j] && (count < 2 || count > 3)) tmpGrid[i][j] = false;
-				if (!currentGrid[i][j] && count === 3) tmpGrid[i][j] = true;
-			}
+		if (this.currentGameStatus === gameStatus.DEAD) {
+			this.setState({ gameOfLife: false });
+			return;
 		}
 
+		const tmpGrid = logic.evaluateGrid(this.state.gridFull, this.rows, this.cols);
 		this.setState(prevState => ({
 			gridFull: tmpGrid,
 			generation: prevState.generation + 1
 		}));
+
+		this.currentGameStatus =
+			logic.IsGridWithCellsAlive(this.state.gridFull, this.rows, this.cols) ?
+				gameStatus.PLAYING : gameStatus.DEAD;
+
 	};
 
-	render() {
-		const buttonGameMode = {
-			playButton: this.playButton,
-			pauseButton: this.pauseButton,
-			slow: this.slow,
-			fast: this.fast,
-			clear: this.clear,
+	getGameModes = () => {
+		return {
+			play: this.playButton,
+			step: this.stepButton,
+			pause: this.pauseButton,
+			normal: this.normalButton,
+			reset: this.resetButton,
+			slow: this.slowButton,
+			fast: this.fastButton,
+			clear: this.clearGrid,
 			seed: this.seedGrid
 		};
+	}
 
+	getGameStatus = () => {
+		let status = '';
+		switch (this.currentGameStatus) {
+			case gameStatus.DRAFT:
+				status = 'Draft';
+				break;
+
+			case gameStatus.DEAD:
+				status = 'Finished';
+				break;
+
+			case gameStatus.PAUSED:
+				status = 'Paused';
+				break;
+
+			default:
+				status = 'Playing';
+				break;
+		}
+		return status;
+	}
+
+	render() {
 		return (
 			<div>
 				<GameLabel>Code Challenge - "Game of Life"</GameLabel>
 
 				<TopBarButtons
-					gameMode={buttonGameMode}
-					gridSize={this.gridSize}
+					gameMode={this.getGameModes()}
 				/>
 
-				<GameGrid
-					gridFull={this.state.gridFull}
-					rows={this.rows}
-					cols={this.cols}
-					selectBox={this.selectCell}
-				/>
-				<GameInfo>
-					Generations: {this.state.generation}
-				</GameInfo>
+				<GameContainer>
+					<GameInfo>
+						<SideOptions
+							gridSize={this.handleGridSize}
+							seederMode={this.handleSeederMode}
+						/>
+						<GameLabels>
+							<GenerationLabel>
+								<TitleLabel> Generations: </TitleLabel>
+								<span>{this.state.generation} </span>
+							</GenerationLabel>
+							<GameStatusLabel>
+								<TitleLabel> Game Status: </TitleLabel>
+								<span> {this.getGameStatus()} </span>
+							</GameStatusLabel>
+						</GameLabels>
+					</GameInfo>
+
+					<GameGrid
+						gridFull={this.state.gridFull}
+						rows={this.rows}
+						cols={this.cols}
+						selectBox={this.selectCell}
+					/>
+				</GameContainer>
 			</div>
 		);
 	}
-}
-
-function arrayClone(arr) {
-	return JSON.parse(JSON.stringify(arr));
 }
 
 ReactDOM.render(<Main />, document.getElementById('root'));
