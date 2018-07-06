@@ -31,9 +31,7 @@ After creation, your project should look like this:
 
 ```
 game-of-life/
-  README.md
   node_modules/
-  package.json
   public/
     index.html
     favicon.ico
@@ -41,13 +39,20 @@ game-of-life/
     components/
       Cell.jsx
       GameGrid.jsx
+      SideOptions.jsx
       TopBarButtons.jsx
     constants/
       gameSpeeds.js
+      gameStatus.js
+      seederModes.js
+    gameLogic/
+      logic.js
     styles/
       index.css
       styledComponents.js
     index.js
+    README.md
+    package.json
 ```
 
 ## Developer
